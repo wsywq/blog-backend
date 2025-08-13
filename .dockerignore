@@ -1,0 +1,23 @@
+# Maven
+target/
+.apt_generated/
+.mvn/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Logs
+logs/
+*.log
+
+# Node, if any frontend is present
+node_modules/
+
+# Others
+.DS_Store
