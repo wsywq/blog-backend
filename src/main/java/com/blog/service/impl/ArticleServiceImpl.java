@@ -1,26 +1,24 @@
 package com.blog.service.impl;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.dto.ArticleDto;
 import com.blog.dto.CreateArticleRequest;
 import com.blog.entity.Article;
 import com.blog.entity.Category;
 import com.blog.entity.Tag;
+import com.blog.enums.ArticleStatus;
 import com.blog.exception.ResourceNotFoundException;
 import com.blog.mapper.ArticleMapper;
-import com.blog.repository.ArticleRepository;
-import com.blog.repository.CategoryRepository;
-import com.blog.repository.TagRepository;
+import com.blog.mapper.CategoryMapper;
+import com.blog.mapper.TagMapper;
 import com.blog.service.ArticleService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -35,31 +33,28 @@ import java.util.stream.Collectors;
 public class ArticleServiceImpl implements ArticleService {
     
     @Autowired
-    private ArticleRepository articleRepository;
-    
-    @Autowired
-    private CategoryRepository categoryRepository;
-    
-    @Autowired
-    private TagRepository tagRepository;
-    
-    @Autowired
     private ArticleMapper articleMapper;
     
+    @Autowired
+    private CategoryMapper categoryMapper;
+    
+    @Autowired
+    private TagMapper tagMapper;
+    
     @Override
-    public Page<ArticleDto> getArticles(int page, int size, String sortBy, String sortDir) {
-        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
-        PageRequest pageable = PageRequest.of(page, size, sort);
-        
-        Page<Article> articles = articleRepository.findPublishedArticles(pageable);
-        return articles.map(articleMapper::toDto);
+    public IPage<ArticleDto> getArticles(int page, int size, String sortBy, String sortDir) {
+        Page<Article> pageParam = new Page<>(page, size);
+        IPage<Article> articles = articleMapper.selectPublishedArticles(pageParam);
+        return articles.convert(this::convertToDto);
     }
     
     @Override
     public ArticleDto getArticleById(Long id) {
-        Article article = articleRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("文章不存在: " + id));
-        return articleMapper.toDto(article);
+        Article article = articleMapper.selectById(id);
+        if (article == null) {
+            throw new ResourceNotFoundException("文章不存在: " + id);
+        }
+        return convertToDto(article);
     }
     
     @Override
@@ -70,55 +65,77 @@ public class ArticleServiceImpl implements ArticleService {
         article.setSummary(request.summary());
         article.setAuthor(request.author());
         article.setCoverImage(request.coverImage());
+        article.setStatus(ArticleStatus.DRAFT);
         
         if (request.categoryId() != null) {
-            Category category = categoryRepository.findById(request.categoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("分类不存在: " + request.categoryId()));
-            article.setCategory(category);
+            Category category = categoryMapper.selectById(request.categoryId());
+            if (category == null) {
+                throw new ResourceNotFoundException("分类不存在: " + request.categoryId());
+            }
+            article.setCategoryId(request.categoryId());
         }
         
+        articleMapper.insert(article);
+        
+        // TODO: 处理标签关联，需要创建article_tags表的操作
         if (request.tagIds() != null && !request.tagIds().isEmpty()) {
-            Set<Tag> tags = tagRepository.findAllById(request.tagIds()).stream()
-                .collect(Collectors.toSet());
-            article.setTags(tags);
+            // 这里需要实现文章标签关联的逻辑
+            log.info("文章标签关联功能待实现");
         }
         
-        Article savedArticle = articleRepository.save(article);
-        return articleMapper.toDto(savedArticle);
+        return convertToDto(article);
     }
     
     @Override
-    public Page<ArticleDto> getArticlesByCategory(Long categoryId, int page, int size) {
-        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createTime"));
-        Page<Article> articles = articleRepository.findByCategoryId(categoryId, pageable);
-        return articles.map(articleMapper::toDto);
+    public IPage<ArticleDto> getArticlesByCategory(Long categoryId, int page, int size) {
+        Page<Article> pageParam = new Page<>(page, size);
+        IPage<Article> articles = articleMapper.selectByCategoryId(pageParam, categoryId);
+        return articles.convert(this::convertToDto);
     }
     
     @Override
-    public Page<ArticleDto> getArticlesByTag(Long tagId, int page, int size) {
-        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createTime"));
-        Page<Article> articles = articleRepository.findByTagId(tagId, pageable);
-        return articles.map(articleMapper::toDto);
+    public IPage<ArticleDto> getArticlesByTag(Long tagId, int page, int size) {
+        Page<Article> pageParam = new Page<>(page, size);
+        IPage<Article> articles = articleMapper.selectByTagId(pageParam, tagId);
+        return articles.convert(this::convertToDto);
     }
     
     @Override
-    public Page<ArticleDto> searchArticles(String keyword, int page, int size) {
-        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createTime"));
-        Page<Article> articles = articleRepository.searchArticles(keyword, pageable);
-        return articles.map(articleMapper::toDto);
+    public IPage<ArticleDto> searchArticles(String keyword, int page, int size) {
+        Page<Article> pageParam = new Page<>(page, size);
+        IPage<Article> articles = articleMapper.searchArticles(pageParam, keyword);
+        return articles.convert(this::convertToDto);
     }
     
     @Override
     public List<ArticleDto> getPopularArticles(int limit) {
-        PageRequest pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "viewCount"));
-        List<Article> articles = articleRepository.findPopularArticles(pageable);
+        List<Article> articles = articleMapper.selectPopularArticles(limit);
         return articles.stream()
-            .map(articleMapper::toDto)
+            .map(this::convertToDto)
             .collect(Collectors.toList());
     }
     
     @Override
     public void incrementViewCount(Long id) {
-        articleRepository.incrementViewCount(id);
+        articleMapper.incrementViewCount(id);
+    }
+    
+    /**
+     * 将实体转换为DTO
+     */
+    private ArticleDto convertToDto(Article article) {
+        return new ArticleDto(
+                article.getId(),
+                article.getTitle(),
+                article.getContent(),
+                article.getSummary(),
+                article.getAuthor(),
+                article.getStatus(),
+                article.getCategoryId(),
+                article.getCoverImage(),
+                article.getViewCount(),
+                article.getCreateTime(),
+                article.getUpdateTime()
+        );
     }
 }

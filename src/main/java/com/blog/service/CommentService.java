@@ -1,10 +1,11 @@
 package com.blog.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.dto.CommentDto;
 import com.blog.dto.CreateCommentRequest;
+import com.blog.entity.Comment;
 import com.blog.enums.CommentStatus;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 /**
  * 评论服务接口
@@ -19,22 +20,22 @@ public interface CommentService {
     /**
      * 根据文章ID获取已批准的评论
      */
-    Page<CommentDto> getApprovedCommentsByArticleId(Long articleId, Pageable pageable);
+    IPage<CommentDto> getApprovedCommentsByArticleId(Long articleId, Page<Comment> page);
 
     /**
      * 根据文章ID获取所有评论（管理员用）
      */
-    Page<CommentDto> getAllCommentsByArticleId(Long articleId, Pageable pageable);
+    IPage<CommentDto> getAllCommentsByArticleId(Long articleId, Page<Comment> page);
 
     /**
      * 根据状态获取评论
      */
-    Page<CommentDto> getCommentsByStatus(CommentStatus status, Pageable pageable);
+    IPage<CommentDto> getCommentsByStatus(CommentStatus status, Page<Comment> page);
 
     /**
      * 根据用户ID获取评论
      */
-    Page<CommentDto> getCommentsByUserId(Long userId, Pageable pageable);
+    IPage<CommentDto> getCommentsByUserId(Long userId, Page<Comment> page);
 
     /**
      * 创建评论

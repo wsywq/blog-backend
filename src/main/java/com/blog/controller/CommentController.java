@@ -1,8 +1,11 @@
 package com.blog.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.dto.ApiResponse;
 import com.blog.dto.CommentDto;
 import com.blog.dto.CreateCommentRequest;
+import com.blog.entity.Comment;
 import com.blog.enums.CommentStatus;
 import com.blog.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,9 +13,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,11 +45,13 @@ public class CommentController {
 
     @GetMapping("/article/{articleId}")
     @Operation(summary = "获取文章评论", description = "获取指定文章的已批准评论")
-    public ResponseEntity<ApiResponse<Page<CommentDto>>> getCommentsByArticleId(
+    public ResponseEntity<ApiResponse<IPage<CommentDto>>> getCommentsByArticleId(
             @Parameter(description = "文章ID") @PathVariable Long articleId,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
         try {
-            Page<CommentDto> comments = commentService.getApprovedCommentsByArticleId(articleId, pageable);
+            Page<Comment> pageParam = new Page<>(page, size);
+            IPage<CommentDto> comments = commentService.getApprovedCommentsByArticleId(articleId, pageParam);
             return ResponseEntity.ok(ApiResponse.success("获取评论成功", comments));
         } catch (Exception e) {
             log.error("获取文章评论失败，文章ID: {}", articleId, e);
@@ -59,11 +61,13 @@ public class CommentController {
 
     @GetMapping("/article/{articleId}/all")
     @Operation(summary = "获取文章所有评论（管理员）", description = "获取指定文章的所有评论，包括待审核的")
-    public ResponseEntity<ApiResponse<Page<CommentDto>>> getAllCommentsByArticleId(
+    public ResponseEntity<ApiResponse<IPage<CommentDto>>> getAllCommentsByArticleId(
             @Parameter(description = "文章ID") @PathVariable Long articleId,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
         try {
-            Page<CommentDto> comments = commentService.getAllCommentsByArticleId(articleId, pageable);
+            Page<Comment> pageParam = new Page<>(page, size);
+            IPage<CommentDto> comments = commentService.getAllCommentsByArticleId(articleId, pageParam);
             return ResponseEntity.ok(ApiResponse.success("获取评论成功", comments));
         } catch (Exception e) {
             log.error("获取文章所有评论失败，文章ID: {}", articleId, e);
@@ -73,11 +77,13 @@ public class CommentController {
 
     @GetMapping("/status/{status}")
     @Operation(summary = "根据状态获取评论", description = "根据评论状态获取评论列表")
-    public ResponseEntity<ApiResponse<Page<CommentDto>>> getCommentsByStatus(
+    public ResponseEntity<ApiResponse<IPage<CommentDto>>> getCommentsByStatus(
             @Parameter(description = "评论状态") @PathVariable CommentStatus status,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
         try {
-            Page<CommentDto> comments = commentService.getCommentsByStatus(status, pageable);
+            Page<Comment> pageParam = new Page<>(page, size);
+            IPage<CommentDto> comments = commentService.getCommentsByStatus(status, pageParam);
             return ResponseEntity.ok(ApiResponse.success("获取评论成功", comments));
         } catch (Exception e) {
             log.error("获取评论失败，状态: {}", status, e);
@@ -87,11 +93,13 @@ public class CommentController {
 
     @GetMapping("/user/{userId}")
     @Operation(summary = "获取用户评论", description = "获取指定用户的所有评论")
-    public ResponseEntity<ApiResponse<Page<CommentDto>>> getCommentsByUserId(
+    public ResponseEntity<ApiResponse<IPage<CommentDto>>> getCommentsByUserId(
             @Parameter(description = "用户ID") @PathVariable Long userId,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
         try {
-            Page<CommentDto> comments = commentService.getCommentsByUserId(userId, pageable);
+            Page<Comment> pageParam = new Page<>(page, size);
+            IPage<CommentDto> comments = commentService.getCommentsByUserId(userId, pageParam);
             return ResponseEntity.ok(ApiResponse.success("获取评论成功", comments));
         } catch (Exception e) {
             log.error("获取用户评论失败，用户ID: {}", userId, e);

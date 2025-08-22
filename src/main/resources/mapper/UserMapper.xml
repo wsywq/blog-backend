@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blog.mapper.UserMapper">
+
+    <!-- 根据用户名查找用户 -->
+    <select id="selectByUsername" resultType="com.blog.entity.User">
+        SELECT * FROM users WHERE username = #{username}
+    </select>
+
+    <!-- 根据邮箱查找用户 -->
+    <select id="selectByEmail" resultType="com.blog.entity.User">
+        SELECT * FROM users WHERE email = #{email}
+    </select>
+
+    <!-- 根据GitHub ID查找用户 -->
+    <select id="selectByGithubId" resultType="com.blog.entity.User">
+        SELECT * FROM users WHERE github_id = #{githubId}
+    </select>
+
+    <!-- 根据用户名或邮箱查找用户 -->
+    <select id="selectByUsernameOrEmail" resultType="com.blog.entity.User">
+        SELECT * FROM users WHERE username = #{usernameOrEmail} OR email = #{usernameOrEmail}
+    </select>
+
+</mapper>

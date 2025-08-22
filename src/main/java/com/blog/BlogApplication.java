@@ -1,8 +1,8 @@
 package com.blog;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
@@ -12,7 +12,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
  * @since 2024-01-01
  */
 @SpringBootApplication
-@EnableJpaAuditing
+@MapperScan("com.blog.mapper")
 @EnableAsync
 public class BlogApplication {
 

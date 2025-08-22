@@ -3,7 +3,7 @@ package com.blog.dto;
 import com.blog.enums.ArticleStatus;
 
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.List;
 
 /**
  * 文章DTO
@@ -18,8 +18,7 @@ public record ArticleDto(
     String summary,
     String author,
     ArticleStatus status,
-    CategoryDto category,
-    Set<TagDto> tags,
+    Long categoryId,
     String coverImage,
     Long viewCount,
     LocalDateTime createTime,

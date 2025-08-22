@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,13 +33,13 @@ public class ArticleController {
     
     @GetMapping
     @Operation(summary = "获取文章列表")
-    public ResponseEntity<ApiResponse<Page<ArticleDto>>> getArticles(
+    public ResponseEntity<ApiResponse<IPage<ArticleDto>>> getArticles(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createTime") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
         try {
-            Page<ArticleDto> articles = articleService.getArticles(page, size, sortBy, sortDir);
+            IPage<ArticleDto> articles = articleService.getArticles(page, size, sortBy, sortDir);
             return ResponseEntity.ok(ApiResponse.success("获取文章列表成功", articles));
         } catch (Exception e) {
             log.error("获取文章列表失败", e);
@@ -78,12 +78,12 @@ public class ArticleController {
     
     @GetMapping("/category/{categoryId}")
     @Operation(summary = "根据分类获取文章")
-    public ResponseEntity<ApiResponse<Page<ArticleDto>>> getArticlesByCategory(
+    public ResponseEntity<ApiResponse<IPage<ArticleDto>>> getArticlesByCategory(
             @PathVariable Long categoryId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         try {
-            Page<ArticleDto> articles = articleService.getArticlesByCategory(categoryId, page, size);
+            IPage<ArticleDto> articles = articleService.getArticlesByCategory(categoryId, page, size);
             return ResponseEntity.ok(ApiResponse.success("获取分类文章成功", articles));
         } catch (Exception e) {
             log.error("获取分类文章失败", e);
@@ -94,12 +94,12 @@ public class ArticleController {
     
     @GetMapping("/tag/{tagId}")
     @Operation(summary = "根据标签获取文章")
-    public ResponseEntity<ApiResponse<Page<ArticleDto>>> getArticlesByTag(
+    public ResponseEntity<ApiResponse<IPage<ArticleDto>>> getArticlesByTag(
             @PathVariable Long tagId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         try {
-            Page<ArticleDto> articles = articleService.getArticlesByTag(tagId, page, size);
+            IPage<ArticleDto> articles = articleService.getArticlesByTag(tagId, page, size);
             return ResponseEntity.ok(ApiResponse.success("获取标签文章成功", articles));
         } catch (Exception e) {
             log.error("获取标签文章失败", e);
@@ -110,12 +110,12 @@ public class ArticleController {
     
     @GetMapping("/search")
     @Operation(summary = "搜索文章")
-    public ResponseEntity<ApiResponse<Page<ArticleDto>>> searchArticles(
+    public ResponseEntity<ApiResponse<IPage<ArticleDto>>> searchArticles(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         try {
-            Page<ArticleDto> articles = articleService.searchArticles(keyword, page, size);
+            IPage<ArticleDto> articles = articleService.searchArticles(keyword, page, size);
             return ResponseEntity.ok(ApiResponse.success("搜索文章成功", articles));
         } catch (Exception e) {
             log.error("搜索文章失败", e);

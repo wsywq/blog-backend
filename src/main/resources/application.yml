@@ -19,15 +19,22 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
     
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
-        format_sql: true
-        use_sql_comments: true
+  # MyBatis Plus配置
+  mybatis-plus:
+    configuration:
+      map-underscore-to-camel-case: true
+      cache-enabled: false
+      call-setters-on-nulls: true
+      jdbc-type-for-null: 'null'
+      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    global-config:
+      db-config:
+        id-type: auto
+        logic-delete-field: deleted
+        logic-delete-value: 1
+        logic-not-delete-value: 0
+    mapper-locations: classpath*:mapper/*.xml
+    type-aliases-package: com.blog.entity
         
   data:
     redis:

@@ -1,6 +1,6 @@
 package com.blog.entity;
 
-import jakarta.persistence.*;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -10,21 +10,20 @@ import lombok.EqualsAndHashCode;
  * @author blog
  * @since 2024-01-01
  */
-@Entity
-@Table(name = "visitor_stats")
+@TableName("visitor_stats")
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class VisitorStats extends BaseEntity {
     
-    @Column(length = 45)
+    @TableField("ip_address")
     private String ipAddress;
     
-    @Column(length = 500)
+    @TableField("user_agent")
     private String userAgent;
     
-    @Column(length = 500)
+    @TableField("referer")
     private String referer;
     
-    @Column(length = 500)
+    @TableField("page_url")
     private String pageUrl;
 }

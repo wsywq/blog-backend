@@ -1,19 +1,33 @@
 package com.blog.mapper;
 
-import com.blog.dto.TagDto;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.blog.entity.Tag;
-import org.mapstruct.Mapper;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
- * 标签映射器
+ * 标签Mapper
  * 
  * @author blog
  * @since 2024-01-01
  */
-@Mapper(componentModel = "spring")
-public interface TagMapper {
+@Mapper
+public interface TagMapper extends BaseMapper<Tag> {
     
-    TagDto toDto(Tag tag);
+    /**
+     * 根据名称查找标签
+     */
+    Tag selectByName(@Param("name") String name);
     
-    Tag toEntity(TagDto tagDto);
+    /**
+     * 检查标签名称是否存在
+     */
+    boolean existsByName(@Param("name") String name);
+    
+    /**
+     * 根据名称列表查找标签
+     */
+    List<Tag> selectByNameIn(@Param("names") List<String> names);
 }

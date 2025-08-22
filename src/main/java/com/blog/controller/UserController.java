@@ -1,16 +1,16 @@
 package com.blog.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.dto.ApiResponse;
 import com.blog.dto.UserDto;
+import com.blog.entity.User;
 import com.blog.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,10 +30,12 @@ public class UserController {
 
     @GetMapping
     @Operation(summary = "获取用户列表", description = "分页获取所有用户")
-    public ResponseEntity<ApiResponse<Page<UserDto>>> getUsers(
-            @PageableDefault(size = 20) Pageable pageable) {
+    public ResponseEntity<ApiResponse<IPage<UserDto>>> getUsers(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
         try {
-            Page<UserDto> users = userService.getAllUsers(pageable);
+            Page<User> pageParam = new Page<>(page, size);
+            IPage<UserDto> users = userService.getAllUsers(pageParam);
             return ResponseEntity.ok(ApiResponse.success("获取用户列表成功", users));
         } catch (Exception e) {
             log.error("获取用户列表失败", e);

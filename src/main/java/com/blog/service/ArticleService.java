@@ -1,8 +1,10 @@
 package com.blog.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.dto.ArticleDto;
 import com.blog.dto.CreateArticleRequest;
-import org.springframework.data.domain.Page;
+import com.blog.entity.Article;
 
 import java.util.List;
 
@@ -17,7 +19,7 @@ public interface ArticleService {
     /**
      * 获取文章列表
      */
-    Page<ArticleDto> getArticles(int page, int size, String sortBy, String sortDir);
+    IPage<ArticleDto> getArticles(int page, int size, String sortBy, String sortDir);
     
     /**
      * 根据ID获取文章详情
@@ -32,17 +34,17 @@ public interface ArticleService {
     /**
      * 根据分类获取文章
      */
-    Page<ArticleDto> getArticlesByCategory(Long categoryId, int page, int size);
+    IPage<ArticleDto> getArticlesByCategory(Long categoryId, int page, int size);
     
     /**
      * 根据标签获取文章
      */
-    Page<ArticleDto> getArticlesByTag(Long tagId, int page, int size);
+    IPage<ArticleDto> getArticlesByTag(Long tagId, int page, int size);
     
     /**
      * 搜索文章
      */
-    Page<ArticleDto> searchArticles(String keyword, int page, int size);
+    IPage<ArticleDto> searchArticles(String keyword, int page, int size);
     
     /**
      * 获取热门文章

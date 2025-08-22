@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.blog.mapper.CommentMapper">
+
+    <!-- 根据文章ID查找已批准的评论 -->
+    <select id="selectByArticleIdAndStatusApproved" resultType="com.blog.entity.Comment">
+        SELECT * FROM comments 
+        WHERE article_id = #{articleId} AND status = 'APPROVED'
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据文章ID查找所有评论 -->
+    <select id="selectByArticleId" resultType="com.blog.entity.Comment">
+        SELECT * FROM comments 
+        WHERE article_id = #{articleId}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据状态查找评论 -->
+    <select id="selectByStatus" resultType="com.blog.entity.Comment">
+        SELECT * FROM comments 
+        WHERE status = #{status}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据用户ID查找评论 -->
+    <select id="selectByUserId" resultType="com.blog.entity.Comment">
+        SELECT * FROM comments 
+        WHERE user_id = #{userId}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 统计文章的评论数量 -->
+    <select id="countByArticleIdAndStatusApproved" resultType="long">
+        SELECT COUNT(*) FROM comments 
+        WHERE article_id = #{articleId} AND status = 'APPROVED'
+    </select>
+
+    <!-- 统计待审核的评论数量 -->
+    <select id="countByStatus" resultType="long">
+        SELECT COUNT(*) FROM comments WHERE status = #{status}
+    </select>
+
+    <!-- 根据文章ID删除评论 -->
+    <delete id="deleteByArticleId">
+        DELETE FROM comments WHERE article_id = #{articleId}
+    </delete>
+
+    <!-- 根据用户ID删除评论 -->
+    <delete id="deleteByUserId">
+        DELETE FROM comments WHERE user_id = #{userId}
+    </delete>
+
+</mapper>

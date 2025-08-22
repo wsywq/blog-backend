@@ -1,10 +1,7 @@
 package com.blog.entity;
 
-import jakarta.persistence.*;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -14,31 +11,15 @@ import java.time.LocalDateTime;
  * @author blog
  * @since 2024-01-01
  */
-@MappedSuperclass
 @Data
-@EntityListeners(AuditingEntityListener.class)
 public abstract class BaseEntity {
     
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(type = IdType.AUTO)
     private Long id;
     
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
     
-    @LastModifiedDate
-    @Column(nullable = false)
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
-    
-    @PrePersist
-    protected void onCreate() {
-        createTime = LocalDateTime.now();
-        updateTime = LocalDateTime.now();
-    }
-    
-    @PreUpdate
-    protected void onUpdate() {
-        updateTime = LocalDateTime.now();
-    }
 }

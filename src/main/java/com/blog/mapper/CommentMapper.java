@@ -1,28 +1,57 @@
 package com.blog.mapper;
 
-import com.blog.dto.CommentDto;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.entity.Comment;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import com.blog.enums.CommentStatus;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 /**
- * 评论映射器
+ * 评论数据访问层
  */
-@Mapper(componentModel = "spring", uses = {UserMapper.class})
-public interface CommentMapper {
+@Mapper
+public interface CommentMapper extends BaseMapper<Comment> {
 
     /**
-     * 将评论实体转换为DTO
+     * 根据文章ID查找已批准的评论
      */
-    @Mapping(source = "article.id", target = "articleId")
-    @Mapping(source = "user", target = "user")
-    CommentDto toDto(Comment comment);
+    IPage<Comment> selectByArticleIdAndStatusApproved(Page<Comment> page, @Param("articleId") Long articleId);
 
     /**
-     * 将DTO转换为评论实体
+     * 根据文章ID查找所有评论
      */
-    @Mapping(target = "article", ignore = true)
-    @Mapping(target = "user", ignore = true)
-    Comment toEntity(CommentDto commentDto);
+    IPage<Comment> selectByArticleId(Page<Comment> page, @Param("articleId") Long articleId);
+
+    /**
+     * 根据状态查找评论
+     */
+    IPage<Comment> selectByStatus(Page<Comment> page, @Param("status") CommentStatus status);
+
+    /**
+     * 根据用户ID查找评论
+     */
+    IPage<Comment> selectByUserId(Page<Comment> page, @Param("userId") Long userId);
+
+    /**
+     * 统计文章的评论数量
+     */
+    long countByArticleIdAndStatusApproved(@Param("articleId") Long articleId);
+
+    /**
+     * 统计待审核的评论数量
+     */
+    long countByStatus(@Param("status") CommentStatus status);
+
+    /**
+     * 根据文章ID删除评论
+     */
+    int deleteByArticleId(@Param("articleId") Long articleId);
+
+    /**
+     * 根据用户ID删除评论
+     */
+    int deleteByUserId(@Param("userId") Long userId);
 }
 

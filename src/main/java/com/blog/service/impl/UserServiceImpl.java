@@ -1,16 +1,16 @@
 package com.blog.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.dto.UserDto;
 import com.blog.entity.User;
 import com.blog.enums.UserRole;
 import com.blog.exception.ResourceNotFoundException;
 import com.blog.mapper.UserMapper;
-import com.blog.repository.UserRepository;
 import com.blog.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,77 +25,80 @@ import java.util.Optional;
 @Slf4j
 public class UserServiceImpl implements UserService {
 
-    private final UserRepository userRepository;
     private final UserMapper userMapper;
 
     @Override
     @Transactional(readOnly = true)
     public UserDto getUserById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("用户不存在，ID: " + id));
-        return userMapper.toDto(user);
+        User user = userMapper.selectById(id);
+        if (user == null) {
+            throw new ResourceNotFoundException("用户不存在，ID: " + id);
+        }
+        return convertToDto(user);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<UserDto> getUserByUsername(String username) {
-        return userRepository.findByUsername(username)
-                .map(userMapper::toDto);
+        User user = userMapper.selectByUsername(username);
+        return Optional.ofNullable(user).map(this::convertToDto);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<UserDto> getUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .map(userMapper::toDto);
+        User user = userMapper.selectByEmail(email);
+        return Optional.ofNullable(user).map(this::convertToDto);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<UserDto> getUserByGithubId(String githubId) {
-        return userRepository.findByGithubId(githubId)
-                .map(userMapper::toDto);
+        User user = userMapper.selectByGithubId(githubId);
+        return Optional.ofNullable(user).map(this::convertToDto);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<UserDto> getAllUsers(Pageable pageable) {
-        return userRepository.findAll(pageable)
-                .map(userMapper::toDto);
+    public IPage<UserDto> getAllUsers(Page<User> page) {
+        IPage<User> userPage = userMapper.selectPage(page, null);
+        return userPage.convert(this::convertToDto);
     }
 
     @Override
     public UserDto createUser(UserDto userDto) {
         // 检查用户名是否已存在
-        if (userRepository.existsByUsername(userDto.username())) {
+        if (userMapper.selectByUsername(userDto.username()) != null) {
             throw new IllegalArgumentException("用户名已存在: " + userDto.username());
         }
 
         // 检查邮箱是否已存在
-        if (userRepository.existsByEmail(userDto.email())) {
+        if (userMapper.selectByEmail(userDto.email()) != null) {
             throw new IllegalArgumentException("邮箱已存在: " + userDto.email());
         }
 
-        User user = userMapper.toEntity(userDto);
-        User savedUser = userRepository.save(user);
-        log.info("创建用户成功: {}", savedUser.getUsername());
-        return userMapper.toDto(savedUser);
+        User user = convertToEntity(userDto);
+        userMapper.insert(user);
+        log.info("创建用户成功: {}", user.getUsername());
+        return convertToDto(user);
     }
 
     @Override
     public UserDto updateUser(Long id, UserDto userDto) {
-        User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("用户不存在，ID: " + id));
+        User existingUser = userMapper.selectById(id);
+        if (existingUser == null) {
+            throw new ResourceNotFoundException("用户不存在，ID: " + id);
+        }
 
         // 检查用户名是否被其他用户使用
-        if (!existingUser.getUsername().equals(userDto.username()) &&
-                userRepository.existsByUsername(userDto.username())) {
+        User userByUsername = userMapper.selectByUsername(userDto.username());
+        if (userByUsername != null && !userByUsername.getId().equals(id)) {
             throw new IllegalArgumentException("用户名已存在: " + userDto.username());
         }
 
         // 检查邮箱是否被其他用户使用
-        if (!existingUser.getEmail().equals(userDto.email()) &&
-                userRepository.existsByEmail(userDto.email())) {
+        User userByEmail = userMapper.selectByEmail(userDto.email());
+        if (userByEmail != null && !userByEmail.getId().equals(id)) {
             throw new IllegalArgumentException("邮箱已存在: " + userDto.email());
         }
 
@@ -106,60 +109,95 @@ public class UserServiceImpl implements UserService {
         existingUser.setGithubId(userDto.githubId());
         existingUser.setRole(userDto.role());
 
-        User updatedUser = userRepository.save(existingUser);
-        log.info("更新用户成功: {}", updatedUser.getUsername());
-        return userMapper.toDto(updatedUser);
+        userMapper.updateById(existingUser);
+        log.info("更新用户成功: {}", existingUser.getUsername());
+        return convertToDto(existingUser);
     }
 
     @Override
     public void deleteUser(Long id) {
-        if (!userRepository.existsById(id)) {
+        User user = userMapper.selectById(id);
+        if (user == null) {
             throw new ResourceNotFoundException("用户不存在，ID: " + id);
         }
-        userRepository.deleteById(id);
-        log.info("删除用户成功，ID: {}", id);
+
+        userMapper.deleteById(id);
+        log.info("删除用户成功: {}", user.getUsername());
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean existsByUsername(String username) {
-        return userRepository.existsByUsername(username);
+        return userMapper.selectByUsername(username) != null;
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean existsByEmail(String email) {
-        return userRepository.existsByEmail(email);
+        return userMapper.selectByEmail(email) != null;
     }
 
     @Override
-    public UserDto createOrUpdateUserByGithub(String githubId, String username, String email, String avatar) {
-        // 先尝试根据GitHub ID查找用户
-        Optional<User> existingUser = userRepository.findByGithubId(githubId);
+    @Transactional(readOnly = true)
+    public Optional<UserDto> getUserByUsernameOrEmail(String usernameOrEmail) {
+        User user = userMapper.selectByUsernameOrEmail(usernameOrEmail);
+        return Optional.ofNullable(user).map(this::convertToDto);
+    }
+
+    @Override
+    public UserDto createOrUpdateUserByGithubId(String githubId, String username, String email, String avatar) {
+        User existingUser = userMapper.selectByGithubId(githubId);
         
-        if (existingUser.isPresent()) {
+        if (existingUser != null) {
             // 更新现有用户信息
-            User user = existingUser.get();
-            user.setUsername(username);
-            user.setEmail(email);
-            user.setAvatar(avatar);
-            
-            User updatedUser = userRepository.save(user);
-            log.info("通过GitHub更新用户成功: {}", updatedUser.getUsername());
-            return userMapper.toDto(updatedUser);
+            existingUser.setUsername(username);
+            existingUser.setEmail(email);
+            existingUser.setAvatar(avatar);
+            userMapper.updateById(existingUser);
+            log.info("更新GitHub用户信息: {}", username);
+            return convertToDto(existingUser);
         } else {
             // 创建新用户
             User newUser = new User();
+            newUser.setGithubId(githubId);
             newUser.setUsername(username);
             newUser.setEmail(email);
             newUser.setAvatar(avatar);
-            newUser.setGithubId(githubId);
             newUser.setRole(UserRole.USER);
             
-            User savedUser = userRepository.save(newUser);
-            log.info("通过GitHub创建用户成功: {}", savedUser.getUsername());
-            return userMapper.toDto(savedUser);
+            userMapper.insert(newUser);
+            log.info("创建GitHub用户: {}", username);
+            return convertToDto(newUser);
         }
+    }
+
+    /**
+     * 将实体转换为DTO
+     */
+    private UserDto convertToDto(User user) {
+        return new UserDto(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getAvatar(),
+                user.getGithubId(),
+                user.getRole(),
+                user.getCreateTime(),
+                user.getUpdateTime()
+        );
+    }
+
+    /**
+     * 将DTO转换为实体
+     */
+    private User convertToEntity(UserDto userDto) {
+        User user = new User();
+        user.setUsername(userDto.username());
+        user.setEmail(userDto.email());
+        user.setAvatar(userDto.avatar());
+        user.setGithubId(userDto.githubId());
+        user.setRole(userDto.role());
+        return user;
     }
 }
 

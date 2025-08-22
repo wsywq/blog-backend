@@ -1,19 +1,26 @@
 package com.blog.mapper;
 
-import com.blog.dto.CategoryDto;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.blog.entity.Category;
-import org.mapstruct.Mapper;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 /**
- * 分类映射器
+ * 分类Mapper
  * 
  * @author blog
  * @since 2024-01-01
  */
-@Mapper(componentModel = "spring")
-public interface CategoryMapper {
+@Mapper
+public interface CategoryMapper extends BaseMapper<Category> {
     
-    CategoryDto toDto(Category category);
+    /**
+     * 根据名称查找分类
+     */
+    Category selectByName(@Param("name") String name);
     
-    Category toEntity(CategoryDto categoryDto);
+    /**
+     * 检查分类名称是否存在
+     */
+    boolean existsByName(@Param("name") String name);
 }
